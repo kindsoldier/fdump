@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# $Id$
+#
+# PROVIDE: fdagentd
+# REQUIRE: DAEMON
+
+. /etc/rc.subr
+
+name="fdagentd"
+rcvar="fdagentd_enable"
+
+pidfile="@srv_rundir@"/fdagentd.pid
+command="@prefix@/sbin/${name}"
+command_args="-daemon"
+procname="@prefix@/sbin/${name}"
+
+load_rc_config ${name}
+
+: ${fdagentd_enable:="NO"}
+
+run_rc_command "$1"
+#EOF

@@ -1,0 +1,7 @@
+goos: freebsd
+goarch: amd64
+pkg: dstore/fstore/fscli
+cpu: Intel(R) Core(TM) i5-4300U CPU @ 1.90GHz
+BenchmarkStatus-4   	  433515	     75906 ns/op	    1496 B/op	      34 allocs/op
+PASS
+ok  	dstore/fstore/fscli	33.475s

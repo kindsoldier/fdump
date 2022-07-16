@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# $Id$
+#
+# PROVIDE: fdmasterd
+# REQUIRE: DAEMON
+
+. /etc/rc.subr
+
+name="fdmasterd"
+rcvar="fdmasterd_enable"
+
+pidfile="@srv_rundir@"/fdmasterd.pid
+command="@prefix@/sbin/${name}"
+command_args="-daemon"
+procname="@prefix@/sbin/${name}"
+
+load_rc_config ${name}
+
+: ${fdmasterd_enable:="NO"}
+
+run_rc_command "$1"
+#EOF

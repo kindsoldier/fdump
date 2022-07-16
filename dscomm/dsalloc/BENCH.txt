@@ -1,0 +1,20 @@
+
+msgpack:
+
+goos: freebsd
+goarch: amd64
+pkg: dstore/dsalloc
+cpu: Intel(R) Core(TM) i5-4300U CPU @ 1.90GHz
+BenchmarkIdAlloc-4   	  194697	     54581 ns/op	    8746 B/op	      11 allocs/op
+PASS
+ok  	dstore/dsalloc	11.271s
+
+json:
+
+goos: freebsd
+goarch: amd64
+pkg: dstore/dsalloc
+cpu: Intel(R) Core(TM) i5-4300U CPU @ 1.90GHz
+BenchmarkIdAlloc-4   	   78771	    143904 ns/op	   15243 B/op	       9 allocs/op
+PASS
+ok  	dstore/dsalloc	12.886s

@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# $Id$
+#
+# PROVIDE: fdstored
+# REQUIRE: DAEMON
+
+. /etc/rc.subr
+
+name="fdstored"
+rcvar="fdstored_enable"
+
+pidfile="@srv_rundir@"/fdstored.pid
+command="@prefix@/sbin/${name}"
+command_args="-daemon"
+procname="@prefix@/sbin/${name}"
+
+load_rc_config ${name}
+
+: ${fdstored_enable:="NO"}
+
+run_rc_command "$1"
+#EOF
