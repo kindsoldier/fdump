@@ -1,6 +1,6 @@
 # FDump - File Dump
 
-Network distributed file backup system
+Networked distributed file backup system
 
 
 ## Generic draft
