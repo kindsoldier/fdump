@@ -190,7 +190,6 @@ func (server *Server) ChangeUid() error {
 
     currUid := syscall.Getuid()
     if currUid != 0 {
-        err = fmt.Errorf("impossible to change uid for non-root")
         return err
     }
 
