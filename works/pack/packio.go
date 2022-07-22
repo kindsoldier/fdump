@@ -83,10 +83,18 @@ func UnpackHeader(headerBytes []byte) (*Header, error) {
 }
 
 
+const DTypeFile     int64 = 1 << 0
+const DTypeSlink    int64 = 1 << 1
+const DTypeDir      int64 = 1 << 4
+
+
 type Descr struct {
     Path    string          `json:"path"`
-    Modtime int64           `json:"modTime"`
+    Mtime   int64           `json:"modTime"`
     Size    int64           `json:"size"`
+    Mode    int64           `json:"mode"`
+    Type    int64           `json:"type"`
+    SLink   string          `json:"sLink,omitempty"`
 }
 
 func NewDescr() *Descr {

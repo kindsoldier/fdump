@@ -5,6 +5,7 @@
 package dspack
 
 import(
+    "encoding/json"
     "fmt"
     "path/filepath"
     "testing"
@@ -17,12 +18,13 @@ func TestPacker01(t *testing.T) {
 
     baseDir := t.TempDir()
     packPath := filepath.Join(baseDir, "test.pack")
-    err = Pack("/usr/share", packPath)
+    err = Pack("./", packPath)
     require.NoError(t, err)
 
     descrs, err := List(packPath)
     require.NoError(t, err)
     for _, descr := range descrs {
-        fmt.Println(descr.Path)
+        jsonBin, _ := json.MarshalIndent(descr, "", "    ")
+        fmt.Println(string(jsonBin))
     }
 }
