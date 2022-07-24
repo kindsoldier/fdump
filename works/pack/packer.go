@@ -35,15 +35,29 @@ func List(packPath string) ([]*Descr, error) {
         if descr == nil {
             return descrs, err
         }
-        descrs = append(descrs, descr)
+        descr.Match = false
 
-        _, readErr := Copy(reader, io.Discard, descr.Size)
+        readErr := reader.ReadHashInit()
+        if readErr == io.EOF {
+            return descrs, err
+        }
+
+        _, readErr = reader.ReadBinTo(io.Discard, descr.Size)
         if readErr == io.EOF {
             return descrs, err
         }
         if err != nil {
             return descrs, readErr
         }
+        match, readErr := reader.ReadHashSum()
+        if readErr == io.EOF {
+            return descrs, err
+        }
+        if err != nil {
+            return descrs, readErr
+        }
+        descr.Match = match
+        descrs = append(descrs, descr)
     }
     return descrs, err
 }
@@ -84,8 +98,18 @@ func Unpack(packPath, baseDir string) ([]*Descr, error) {
                 if err != nil {
                     return descrs, err
                 }
-
-                _, readErr := Copy(reader, file, descr.Size)
+                readErr := reader.ReadHashInit()
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                _, readErr = reader.ReadBinTo(file, descr.Size)
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+                _, readErr = reader.ReadHashSum()
                 if readErr == io.EOF {
                     return descrs, err
                 }
@@ -147,6 +171,14 @@ func Pack(baseDir, packPath string) error {
                 if err != nil {
                     return err
                 }
+                err = writer.WriteHashInit()
+                if err != nil {
+                    return err
+                }
+                err = writer.WriteHashSum()
+                if err != nil {
+                    return err
+                }
             case fileMode & fs.ModeSymlink != 0:
                 sLink, err := os.Readlink(filePath)
                 if err != nil {
@@ -161,7 +193,14 @@ func Pack(baseDir, packPath string) error {
                 if err != nil {
                     return err
                 }
-
+                err = writer.WriteHashInit()
+                if err != nil {
+                    return err
+                }
+                err = writer.WriteHashSum()
+                if err != nil {
+                    return err
+                }
             default:
                 file, openErr := os.OpenFile(filePath, os.O_RDONLY, 0)
                 defer file.Close()
@@ -176,7 +215,15 @@ func Pack(baseDir, packPath string) error {
                 if err != nil {
                     return err
                 }
-                _, err = Copy(file, writer, fileSize)
+                err = writer.WriteHashInit()
+                if err != nil {
+                    return err
+                }
+                _, err = writer.WriteBinFrom(file, fileSize)
+                if err != nil {
+                    return err
+                }
+                err = writer.WriteHashSum()
                 if err != nil {
                     return err
                 }
