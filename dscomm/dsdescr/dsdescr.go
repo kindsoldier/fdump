@@ -5,7 +5,7 @@
 package dsdescr
 
 import (
-    "encoding/json"
+    encoder "github.com/vmihailenco/msgpack/v5"
 )
 
 const UStateEnabled     string  = "enabled"
@@ -15,12 +15,12 @@ const URoleAdmin        string  = "admin"
 const URoleUser         string  = "user"
 
 type User struct {
-    Login       string      `json:"login"`
-    Pass        string      `json:"pass"`
-    Role        string      `json:"role"`
-    State       string      `json:"state"`
-    CreatedAt   int64       `json:"updatedAt"`
-    UpdatedAt   int64       `json:"createdAt"`
+    Login       string      `json:"login"	msgpack:"login"`
+    Pass        string      `json:"pass"	msgpack:"pass"`
+    Role        string      `json:"role"	msgpack:"role"`
+    State       string      `json:"state"	msgpack:"state"`
+    CreatedAt   int64       `json:"updatedAt"	msgpack:"updatedAt"`
+    UpdatedAt   int64       `json:"createdAt"	msgpack:"createdAt"`
 }
 
 func NewUser() *User {
@@ -31,27 +31,27 @@ func NewUser() *User {
 func UnpackUser(descrBin []byte) (*User, error) {
     var err error
     var descr User
-    err = json.Unmarshal(descrBin, &descr)
+    err = encoder.Unmarshal(descrBin, &descr)
     return &descr, err
 }
 
 func (descr *User) Pack() ([]byte, error) {
     var err error
-    descrBin, err := json.Marshal(descr)
+    descrBin, err := encoder.Marshal(descr)
     return descrBin, err
 }
 
 
 type File struct {
-    FilePath    string      `json:"filePath"`
-    Login       string      `json:"login"`
-    FileId      int64       `json:"fileId"`
-    BatchCount  int64       `json:"batchCount"`
-    BatchSize   int64       `json:"batchSize"`
-    BlockSize   int64       `json:"blockSize"`
-    DataSize    int64       `json:"dataSize"`
-    CreatedAt   int64       `json:"createdAt"`
-    UpdatedAt   int64       `json:"updatedAt"`
+    FilePath    string      `json:"filePath"	msgpack:"filePath"`
+    Login       string      `json:"login"	msgpack:"login"`
+    FileId      int64       `json:"fileId"	msgpack:"fileId"`
+    BatchCount  int64       `json:"batchCount"	msgpack:"batchCount"`
+    BatchSize   int64       `json:"batchSize"	msgpack:"batchSize"`
+    BlockSize   int64       `json:"blockSize"	msgpack:"blockSize"`
+    DataSize    int64       `json:"dataSize"	msgpack:"dataSize"`
+    CreatedAt   int64       `json:"createdAt"	msgpack:"createdAt"`
+    UpdatedAt   int64       `json:"updatedAt"	msgpack:"updatedAt"`
 }
 
 func NewFile() *File {
@@ -62,24 +62,24 @@ func NewFile() *File {
 func UnpackFile(descrBin []byte) (*File, error) {
     var err error
     var descr File
-    err = json.Unmarshal(descrBin, &descr)
+    err = encoder.Unmarshal(descrBin, &descr)
     return &descr, err
 }
 
 func (descr *File) Pack() ([]byte, error) {
     var err error
-    descrBin, err := json.Marshal(descr)
+    descrBin, err := encoder.Marshal(descr)
     return descrBin, err
 }
 
 
 type Batch struct {
-    BatchId     int64       `json:"batchId"`
-    FileId      int64       `json:"fileId"`
-    BatchSize   int64       `json:"batchSize"`
-    BlockSize   int64       `json:"blockSize"`
-    CreatedAt   int64       `json:"createdAt"`
-    UpdatedAt   int64       `json:"updatedAt"`
+    BatchId     int64       `json:"batchId"	msgpack:"batchId"`
+    FileId      int64       `json:"fileId"	msgpack:"fileId"`
+    BatchSize   int64       `json:"batchSize"	msgpack:"batchSize"`
+    BlockSize   int64       `json:"blockSize"	msgpack:"blockSize"`
+    CreatedAt   int64       `json:"createdAt"	msgpack:"createdAt"`
+    UpdatedAt   int64       `json:"updatedAt"	msgpack:"updatedAt"`
 }
 
 func NewBatch() *Batch {
@@ -90,13 +90,13 @@ func NewBatch() *Batch {
 func UnpackBatch(descrBin []byte) (*Batch, error) {
     var err error
     var descr Batch
-    err = json.Unmarshal(descrBin, &descr)
+    err = encoder.Unmarshal(descrBin, &descr)
     return &descr, err
 }
 
 func (descr *Batch) Pack() ([]byte, error) {
     var err error
-    descrBin, err := json.Marshal(descr)
+    descrBin, err := encoder.Marshal(descr)
     return descrBin, err
 }
 
@@ -104,23 +104,23 @@ const BTData int64 = 1
 const BTReco int64 = 2
 
 type Block struct {
-    FileId      int64       `json:"fileId"`
-    BatchId     int64       `json:"batchId"`
-    BlockType   int64       `json:"blockType"`
-    BlockId     int64       `json:"blockId"`
+    FileId      int64       `json:"fileId"	msgpack:"fileId"`
+    BatchId     int64       `json:"batchId"	msgpack:"batchId"`
+    BlockType   int64       `json:"blockType"	msgpack:"blockType"`
+    BlockId     int64       `json:"blockId"	msgpack:"blockId"`
 
-    BlockSize   int64       `json:"blockSize"`
-    DataSize    int64       `json:"dataSize"`
-    CreatedAt   int64       `json:"createdAt"`
-    UpdatedAt   int64       `json:"updatedAt"`
-    FilePath    string      `json:"filePath"`
+    BlockSize   int64       `json:"blockSize"	msgpack:"blockSize"`
+    DataSize    int64       `json:"dataSize"	msgpack:"dataSize"`
+    CreatedAt   int64       `json:"createdAt"	msgpack:"createdAt"`
+    UpdatedAt   int64       `json:"updatedAt"	msgpack:"updatedAt"`
+    FilePath    string      `json:"filePath"	msgpack:"filePath"`
 
-    HashInit    string      `json:"hashInit"`
-    HashSum     string      `json:"hashSum"`
+    HashInit    string      `json:"hashInit"	msgpack:"hashInit"`
+    HashSum     string      `json:"hashSum"	msgpack:"hashSum"`
 
-    HasLocal    bool        `json:"hasLocal"`
-    HasRemote   bool        `json:"hasRemote"`
-    BstoreId    int64       `json:"bstoreId"`
+    HasLocal    bool        `json:"hasLocal"	msgpack:"hasLocal"`
+    HasRemote   bool        `json:"hasRemote"	msgpack:"hasRemote"`
+    BstoreId    int64       `json:"bstoreId"	msgpack:"bstoreId"`
 }
 
 func NewBlock() *Block {
@@ -131,12 +131,12 @@ func NewBlock() *Block {
 func UnpackBlock(descrBin []byte) (*Block, error) {
     var err error
     var descr Block
-    err = json.Unmarshal(descrBin, &descr)
+    err = encoder.Unmarshal(descrBin, &descr)
     return &descr, err
 }
 
 func (descr *Block) Pack() ([]byte, error) {
     var err error
-    descrBin, err := json.Marshal(descr)
+    descrBin, err := encoder.Marshal(descr)
     return descrBin, err
 }
