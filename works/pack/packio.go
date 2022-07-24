@@ -134,12 +134,18 @@ const DTypeDir      int64 = 1 << 4
 
 type Descr struct {
     Path    string          `json:"path"`
-    Mtime   int64           `json:"modTime"`
+    Mtime   int64           `json:"mtime"`
+    Atime   int64           `json:"atime"`
+    Ctime   int64           `json:"atime"`
     Size    int64           `json:"size"`
-    Mode    int64           `json:"mode"`
+    Mode    uint32          `json:"mode"`
     Type    int64           `json:"type"`
     SLink   string          `json:"sLink,omitempty"`
     Match   bool            `json:"match"`
+    Uid     uint32          `json:"uid"`
+    Gid     uint32          `json:"gid"`
+    User    string          `json:"user"`
+    Group   string          `json:"group"`
 }
 
 func NewDescr() *Descr {
@@ -226,7 +232,7 @@ func (writer *Writer) WriteBinFrom(reader io.Reader, binSize int64) (int64, erro
 func (writer *Writer) WriteHashInit() error {
     var err error
 
-    writer.hashInit  = make([]byte, HWHashInitSize)
+    writer.hashInit = make([]byte, HWHashInitSize)
     rand.Read(writer.hashInit)
 
     writer.hasher, err = highwayhash.New(writer.hashInit)
