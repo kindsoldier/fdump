@@ -8,6 +8,7 @@ package dsrpc
 
 import (
     "encoding/json"
+    encoder "github.com/vmihailenco/msgpack/v5"
 )
 
 type Request struct {
@@ -23,7 +24,7 @@ func NewRequest() *Request {
 }
 
 func (this *Request) Pack() ([]byte, error) {
-    rBytes, err := json.Marshal(this)
+    rBytes, err := encoder.Marshal(this)
     return rBytes, Err(err)
 }
 

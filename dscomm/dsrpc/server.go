@@ -7,12 +7,14 @@
 package dsrpc
 
 import (
-    "encoding/json"
     "context"
     "errors"
+    "fmt"
     "io"
     "net"
     "sync"
+    "time"
+    encoder "github.com/vmihailenco/msgpack/v5"
 )
 
 type HandlerFunc =  func(*Context) error
@@ -56,10 +58,17 @@ func (this *Service) Listen(address string) error {
     var err error
     logInfo("server listen:", address)
 
-    listener, err := net.Listen("tcp", address)
+    addr, err := net.ResolveTCPAddr("tcp", address)
     if err != nil {
+        err = fmt.Errorf("unable to resolve adddress: %s", err)
         return err
     }
+    listener, err := net.ListenTCP("tcp", addr)
+    if err != nil {
+        err = fmt.Errorf("unable to start listener: %s", err)
+        return err
+    }
+
     this.wg.Add(1)
     for {
         select {
@@ -68,7 +77,7 @@ func (this *Service) Listen(address string) error {
                 return err
             default:
         }
-        conn, err := listener.Accept()
+        conn, err := listener.AcceptTCP()
         if err != nil {
             logError("conn accept err:", err)
         }
@@ -89,8 +98,19 @@ func (this *Service) Stop() error {
     return err
 }
 
-func (this *Service) handleConn(conn net.Conn) {
+func (this *Service) handleConn(conn *net.TCPConn) {
     var err error
+
+    err = conn.SetKeepAlive(true)
+    if err != nil {
+        err = fmt.Errorf("unable to set keepalive: %s", err)
+        return
+    }
+    err = conn.SetKeepAlivePeriod(1 * time.Second)
+    if err != nil {
+        err = fmt.Errorf("unable to set keepalive period: %s", err)
+        return
+    }
 
     context := CreateContext(conn)
 
@@ -199,14 +219,14 @@ func (context *Context) ReadBin(writer io.Writer) error {
 
 func (context *Context) BindMethod() error {
     var err error
-    err = json.Unmarshal(context.reqPacket.rcpPayload, context.reqRPC)
+    err = encoder.Unmarshal(context.reqPacket.rcpPayload, context.reqRPC)
     return Err(err)
 }
 
 func (context *Context) BindParams(params any) error {
     var err error
     context.reqRPC.Params = params
-    err = json.Unmarshal(context.reqPacket.rcpPayload, context.reqRPC)
+    err = encoder.Unmarshal(context.reqPacket.rcpPayload, context.reqRPC)
     if err != nil {
         return Err(err)
     }

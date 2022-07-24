@@ -8,6 +8,7 @@ package dsrpc
 
 import (
     "encoding/json"
+    encoder "github.com/vmihailenco/msgpack/v5"
 )
 
 
@@ -26,6 +27,6 @@ func (this *Response) JSON() []byte {
 }
 
 func (this *Response) Pack() ([]byte, error) {
-    rBytes, err := json.Marshal(this)
+    rBytes, err := encoder.Marshal(this)
     return rBytes, Err(err)
 }
