@@ -1,7 +1,5 @@
 /*
- *
  * Copyright 2022 Oleg Borodin  <borodin@unix7.org>
- *
  */
 
 package dsrpc
@@ -12,7 +10,6 @@ import (
     "io"
     "net"
     "sync"
-    "time"
 
     encoder "github.com/vmihailenco/msgpack/v5"
 )
@@ -32,16 +29,17 @@ func Put(address string, method string, reader io.Reader, size int64, param, res
     }
     defer conn.Close()
 
-    err = conn.SetKeepAlive(true)
-    if err != nil {
-        err = fmt.Errorf("unable to set keepalive: %s", err)
-        return Err(err)
-    }
-    err = conn.SetKeepAlivePeriod(1 * time.Second)
-    if err != nil {
-        err = fmt.Errorf("unable to set keepalive period: %s", err)
-        return Err(err)
-    }
+    //err = conn.SetKeepAlive(true)
+    //if err != nil {
+    //    err = fmt.Errorf("unable to set keepalive: %s", err)
+    //    return Err(err)
+    //}
+
+    //err = conn.SetKeepAlivePeriod(10 * time.Second)
+    //if err != nil {
+    //    err = fmt.Errorf("unable to set keepalive period: %s", err)
+    //    return Err(err)
+    //}
 
     return ConnPut(conn, method, reader, size, param, result, auth)
 }
@@ -108,17 +106,17 @@ func Get(address string, method string, writer io.Writer, param, result any, aut
     }
     defer conn.Close()
 
-    err = conn.SetKeepAlive(true)
-    if err != nil {
-        err = fmt.Errorf("unable to set keepalive: %s", err)
-        return Err(err)
-    }
-    err = conn.SetKeepAlivePeriod(1 * time.Second)
-    if err != nil {
-        err = fmt.Errorf("unable to set keepalive period: %s", err)
-        return Err(err)
-    }
+    //err = conn.SetKeepAlive(true)
+    //if err != nil {
+    //    err = fmt.Errorf("unable to set keepalive: %s", err)
+    //    return Err(err)
+    //}
 
+    //err = conn.SetKeepAlivePeriod(10 * time.Second)
+    //if err != nil {
+    //    err = fmt.Errorf("unable to set keepalive period: %s", err)
+    //    return Err(err)
+    //}
 
     return ConnGet(conn, method, writer, param, result, auth)
 }
@@ -175,16 +173,16 @@ func Exec(address, method string, param any, result any, auth *Auth) error {
     }
     defer conn.Close()
 
-    err = conn.SetKeepAlive(true)
-    if err != nil {
-        err = fmt.Errorf("unable to set keepalive: %s", err)
-        return Err(err)
-    }
-    err = conn.SetKeepAlivePeriod(1 * time.Second)
-    if err != nil {
-        err = fmt.Errorf("unable to set keepalive period: %s", err)
-        return Err(err)
-    }
+    //err = conn.SetKeepAlive(true)
+    //if err != nil {
+    //    err = fmt.Errorf("unable to set keepalive: %s", err)
+    //    return Err(err)
+    //}
+    //err = conn.SetKeepAlivePeriod(10 * time.Second)
+    //if err != nil {
+    //    err = fmt.Errorf("unable to set keepalive period: %s", err)
+    //    return Err(err)
+    //}
 
     err = ConnExec(conn, method, param, result, auth)
     if err != nil {

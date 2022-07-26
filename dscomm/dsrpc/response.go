@@ -1,7 +1,5 @@
 /*
- *
  * Copyright 2022 Oleg Borodin  <borodin@unix7.org>
- *
  */
 
 package dsrpc
@@ -21,12 +19,12 @@ func NewResponse() *Response {
     return &Response{}
 }
 
-func (this *Response) JSON() []byte {
-    jBytes, _ := json.Marshal(this)
+func (resp *Response) JSON() []byte {
+    jBytes, _ := json.Marshal(resp)
     return jBytes
 }
 
-func (this *Response) Pack() ([]byte, error) {
-    rBytes, err := encoder.Marshal(this)
+func (resp *Response) Pack() ([]byte, error) {
+    rBytes, err := encoder.Marshal(resp)
     return rBytes, Err(err)
 }

@@ -23,12 +23,12 @@ func NewRequest() *Request {
     return req
 }
 
-func (this *Request) Pack() ([]byte, error) {
-    rBytes, err := encoder.Marshal(this)
+func (req *Request) Pack() ([]byte, error) {
+    rBytes, err := encoder.Marshal(req)
     return rBytes, Err(err)
 }
 
-func (this *Request) JSON() []byte {
-    jBytes, _ := json.Marshal(this)
+func (req *Request) JSON() []byte {
+    jBytes, _ := json.Marshal(req)
     return jBytes
 }
