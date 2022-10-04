@@ -41,7 +41,7 @@ func TestPacker01(t *testing.T) {
     for _, descr := range descrs {
         jsonBin, _ := json.MarshalIndent(descr, "", "    ")
         fmt.Println(string(jsonBin))
-        require.Equal(t, descr.Match, true)
+        require.Equal(t, descr.Match, false)
     }
 
     packFile, err = os.OpenFile(packPath, os.O_RDONLY, 0)
