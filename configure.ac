@@ -17,5 +17,10 @@ AC_ARG_ENABLE([fdmaster],
 )
 
 
+AC_ARG_ENABLE([fdpacker],
+    AS_HELP_STRING([--disable-fdpacker], [disable fdpacker module]),,
+    AC_CONFIG_SUBDIRS([fdpacker])
+)
+
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT

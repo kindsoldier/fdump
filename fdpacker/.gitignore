@@ -1,0 +1,13 @@
+*.geany
+*~
+*.png
+*.jpg
+*.gif
+*.bin
+*.log
+autom4te.cache
+Makefile
+config.status
+works/
+vendor/
+data/
