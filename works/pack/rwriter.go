@@ -23,15 +23,17 @@ const DTypeFile     int64 = 1 << 0
 const DTypeSlink    int64 = 1 << 1
 const DTypeDir      int64 = 1 << 2
 
-const HWHashInitSize  int64 = 32
-const HWHashSumSize   int64 = 32
+const HWHashInitSize int64 = 32
+const HWHashSumSize  int64 = 32
+
+const HashTypeHW    string = "hw"
+const HashTypeNone  string = "none"
 
 type Writer struct {
     byteWriter  io.Writer
     hashInit    []byte
     hashSum     []byte
     hasher      hash.Hash
-    mWriter     io.Writer
 }
 
 func NewWriter(byteWriter io.Writer) *Writer {
@@ -108,16 +110,6 @@ func (writer *Writer) WriteTDescr(tailDescr *TDescr) error {
     return err
 }
 
-//func (writer *Writer) WriteHashSum() error {
-//    var err error
-//    hashSum := writer.hasher.Sum(nil)
-//    _, err = writer.byteWriter.Write(hashSum)
-//    if err != nil {
-//        return err
-//    }
-//    return err
-//}
-
 type Reader struct {
     byteReader  io.Reader
     pos         int64
@@ -125,9 +117,7 @@ type Reader struct {
     hashInit    []byte
     hashSum     []byte
     hasher      hash.Hash
-    mWriter     io.Writer
 }
-
 
 func NewReader(byteReader io.Reader) *Reader {
     var reader Reader
@@ -187,11 +177,11 @@ func (reader *Reader) ReadTDescr() (*TDescr, error) {
         return tailDescr, err
     }
 
-    tailend, err := UnpackHeader(tailendBin)
+    tailend, err := UnpackTailend(tailendBin)
     if err != nil {
         return tailDescr, err
     }
-    tailDescrBin := make([]byte, tailend.HDescrSize)
+    tailDescrBin := make([]byte, tailend.TDescrSize)
     _, err = reader.byteReader.Read(tailDescrBin)
     if err != nil {
         return tailDescr, err

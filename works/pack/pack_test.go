@@ -17,15 +17,14 @@ import(
 func TestPacker01(t *testing.T) {
     var err error
 
-    baseDir := t.TempDir()
+    baseDir := "./" //t.TempDir()
 
     packPath := filepath.Join(baseDir, "test.pack")
     dirs := []string{ "/usr/bin" }
 
-    packFile, err := os.OpenFile(packPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+    packFile, err := os.OpenFile(packPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
     defer packFile.Close()
     require.NoError(t, err)
-
 
     err = Pack(dirs, packFile)
     require.NoError(t, err)
@@ -34,14 +33,13 @@ func TestPacker01(t *testing.T) {
     defer packFile.Close()
     require.NoError(t, err)
 
-
     descrs, err := List(packFile)
     require.NoError(t, err)
 
     for _, descr := range descrs {
         jsonBin, _ := json.MarshalIndent(descr, "", "    ")
         fmt.Println(string(jsonBin))
-        require.Equal(t, descr.Match, false)
+        require.Equal(t, descr.Match, true)
     }
 
     packFile, err = os.OpenFile(packPath, os.O_RDONLY, 0)
@@ -50,4 +48,6 @@ func TestPacker01(t *testing.T) {
 
     descrs, err = Unpack(packFile, "./xxx")
     require.NoError(t, err)
+
+    os.RemoveAll("./xxx")
 }

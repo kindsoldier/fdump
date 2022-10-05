@@ -60,6 +60,7 @@ func (tailend *Tailend) Pack() ([]byte, error) {
 
 func UnpackTailend(tailendBytes []byte) (*Tailend, error) {
     var err error
+
     tailend := NewTailend()
     tailendReader := bytes.NewReader(tailendBytes)
 

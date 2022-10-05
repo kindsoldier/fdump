@@ -5,6 +5,7 @@
 package dspack
 
 import (
+    "bytes"
     "io"
     "io/fs"
     "os"
@@ -45,6 +46,9 @@ func Pack(dirs []string, outWriter io.Writer) error {
         headDescr.Path  = strings.TrimLeft(filePath, "/")
         headDescr.HInit = writer.hashInit
 
+
+        tailDescr := NewTDescr()
+
         switch {
             case fileMode & fs.ModeDir != 0:
 
@@ -57,6 +61,8 @@ func Pack(dirs []string, outWriter io.Writer) error {
 
                 headDescr.Uid = sysStat.Uid
                 headDescr.Gid = sysStat.Gid
+
+                headDescr.HType = HashTypeNone
 
                 uid := strconv.FormatUint(uint64(headDescr.Uid), 10)
                 gid := strconv.FormatUint(uint64(headDescr.Gid), 10)
@@ -78,14 +84,12 @@ func Pack(dirs []string, outWriter io.Writer) error {
                 if err != nil {
                     return err
                 }
-                //err = writer.WriteHashInit()
-                //if err != nil {
-                //    return err
-                //}
-                //err = writer.WriteHashSum()
-                //if err != nil {
-                //    return err
-                //}
+
+                err = writer.WriteTDescr(tailDescr)
+                if err != nil {
+                    return err
+                }
+
             case fileMode & fs.ModeSymlink != 0:
                 sLink, err := os.Readlink(filePath)
                 if err != nil {
@@ -105,6 +109,8 @@ func Pack(dirs []string, outWriter io.Writer) error {
                 uid := strconv.FormatUint(uint64(headDescr.Uid), 10)
                 gid := strconv.FormatUint(uint64(headDescr.Gid), 10)
 
+
+
                 iUser, err := user.LookupId(uid)
                 if err == nil && iUser != nil {
                     headDescr.User = iUser.Username
@@ -118,18 +124,18 @@ func Pack(dirs []string, outWriter io.Writer) error {
                 headDescr.Size  = 0
                 headDescr.Mode  = uint32(sysStat.Mode)
                 headDescr.SLink = sLink
+
+                headDescr.HType = HashTypeNone
+
                 err = writer.WriteHDescr(headDescr)
                 if err != nil {
                     return err
                 }
-                //err = writer.WriteHashInit()
-                //if err != nil {
-                //    return err
-                //}
-                //err = writer.WriteHashSum()
-                //if err != nil {
-                //    return err
-                //}
+
+                err = writer.WriteTDescr(tailDescr)
+                if err != nil {
+                    return err
+                }
             default:
 
                 file, openErr := os.OpenFile(filePath, os.O_RDONLY, 0)
@@ -164,25 +170,23 @@ func Pack(dirs []string, outWriter io.Writer) error {
                 headDescr.Size  = sysStat.Size
                 headDescr.Mode  = uint32(fileMode)
 
+                headDescr.HType = HashTypeHW
+
                 err = writer.WriteHDescr(headDescr)
                 if err != nil {
                     return err
                 }
-
-                //err = writer.WriteHashInit()
-                //if err != nil {
-                //    return err
-                //}
-
                 _, err = writer.WriteBin(file, headDescr.Size)
                 if err != nil {
                     return err
                 }
 
-                //err = writer.WriteHashSum()
-                //if err != nil {
-                //    return err
-                //}
+                tailDescr.HSum = writer.hashSum
+
+                err = writer.WriteTDescr(tailDescr)
+                if err != nil {
+                    return err
+                }
         }
         return err
     }
@@ -196,7 +200,6 @@ func Pack(dirs []string, outWriter io.Writer) error {
     return err
 }
 
-
 func Unpack(outReader io.Reader, baseDir string) ([]*HDescr, error) {
     var err error
     descrs := make([]*HDescr, 0)
@@ -205,6 +208,7 @@ func Unpack(outReader io.Reader, baseDir string) ([]*HDescr, error) {
 
     for {
         headDescr, readerErr := reader.ReadHDescr()
+
         if err == io.EOF {
             return descrs, err
         }
@@ -230,11 +234,6 @@ func Unpack(outReader io.Reader, baseDir string) ([]*HDescr, error) {
                     return descrs, err
                 }
 
-                //readErr := reader.ReadHashInit()
-                //if readErr == io.EOF {
-                //    return descrs, err
-                //}
-
                 _, readErr := reader.ReadBin(file, headDescr.Size)
                 if readErr == io.EOF {
                     return descrs, err
@@ -243,12 +242,19 @@ func Unpack(outReader io.Reader, baseDir string) ([]*HDescr, error) {
                     return descrs, readErr
                 }
 
-                //_, readErr = reader.ReadHashSum()
-                //if readErr == io.EOF {
-                //    return descrs, err
-                //}
+                tailDescr, readErr := reader.ReadTDescr()
+                if readErr == io.EOF {
+                    return descrs, err
+                }
                 if err != nil {
                     return descrs, readErr
+                }
+                if tailDescr == nil {
+                    return descrs, err
+                }
+
+                if bytes.Compare(tailDescr.HSum, reader.hashSum) == 0 {
+                    headDescr.Match = true
                 }
 
                 mTime := time.Unix(headDescr.Mtime, 0)
@@ -279,18 +285,16 @@ func Unpack(outReader io.Reader, baseDir string) ([]*HDescr, error) {
                     return descrs, err
                 }
 
-                //readErr := reader.ReadHashInit()
-                //if readErr == io.EOF {
-                //    return descrs, err
-                //}
-
-                //_, readErr = reader.ReadHashSum()
-                //if readErr == io.EOF {
-                //    return descrs, err
-                //}
-                //if err != nil {
-                //    return descrs, readErr
-                //}
+                tailDescr, readErr := reader.ReadTDescr()
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+                if tailDescr == nil {
+                    return descrs, err
+                }
 
                 //err = syscall.Chmod(unpackPath, fs.FileMode(headDescr.Mode))
                 //if err != nil {
@@ -317,17 +321,16 @@ func Unpack(outReader io.Reader, baseDir string) ([]*HDescr, error) {
                     return descrs, err
                 }
 
-                //readErr := reader.ReadHashInit()
-                //if readErr == io.EOF {
-                //    return descrs, err
-                //}
-                //_, readErr = reader.ReadHashSum()
-                //if readErr == io.EOF {
-                //    return descrs, err
-                //}
-                //if err != nil {
-                //    return descrs, readErr
-                //}
+                tailDescr, readErr := reader.ReadTDescr()
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+                if tailDescr == nil {
+                    return descrs, err
+                }
 
                 //err = os.Chmod(unpackPath, fs.FileMode(headDescr.Mode))
                 //if err != nil {
@@ -348,10 +351,6 @@ func Unpack(outReader io.Reader, baseDir string) ([]*HDescr, error) {
                 }
 
             default:
-                //readErr := reader.ReadHashInit()
-                //if readErr == io.EOF {
-                //    return descrs, err
-                //}
                 _, readErr := reader.ReadBin(io.Discard, headDescr.Size)
                 if readErr == io.EOF {
                     return descrs, err
@@ -360,14 +359,17 @@ func Unpack(outReader io.Reader, baseDir string) ([]*HDescr, error) {
                     return descrs, readErr
                 }
 
-                //_, readErr = reader.ReadHashSum()
-                //if readErr == io.EOF {
-                //    return descrs, err
-                //}
-                //if err != nil {
-                //    return descrs, readErr
-                //}
-
+                tailDescr, readErr := reader.ReadTDescr()
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+                if tailDescr == nil {
+                    return descrs, err
+                }
+                headDescr.Match = true
         }
         descrs = append(descrs, headDescr)
     }
@@ -391,31 +393,81 @@ func List(outReader io.Reader) ([]*HDescr, error) {
         if headDescr == nil {
             return descrs, err
         }
-        headDescr.Match = false
+        reader.hashInit = headDescr.HInit
 
-        //readErr := reader.ReadHashInit()
-        //if readErr == io.EOF {
-        //    return descrs, err
-        //}
+        switch headDescr.Type {
+            case DTypeFile:
 
-        _, readErr := reader.ReadBin(io.Discard, headDescr.Size)
-        if readErr == io.EOF {
-            return descrs, err
+                _, readErr := reader.ReadBin(io.Discard, headDescr.Size)
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+
+                tailDescr, readErr := reader.ReadTDescr()
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+                if tailDescr == nil {
+                    return descrs, err
+                }
+
+
+                if bytes.Compare(tailDescr.HSum, reader.hashSum) == 0 {
+                    headDescr.Match = true
+                }
+
+            case DTypeSlink, DTypeDir:
+
+                headDescr.Match = true
+
+                _, readErr := reader.ReadBin(io.Discard, headDescr.Size)
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+
+                tailDescr, readErr := reader.ReadTDescr()
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+                if tailDescr == nil {
+                    return descrs, err
+                }
+            default:
+
+                headDescr.Match = true
+
+                _, readErr := reader.ReadBin(io.Discard, headDescr.Size)
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+
+                tailDescr, readErr := reader.ReadTDescr()
+                if readErr == io.EOF {
+                    return descrs, err
+                }
+                if err != nil {
+                    return descrs, readErr
+                }
+                if tailDescr == nil {
+                    return descrs, err
+                }
+
         }
-        if err != nil {
-            return descrs, readErr
-        }
-
-        //match, readErr := reader.ReadHashSum()
-        //if readErr == io.EOF {
-        //    return descrs, err
-        //}
-        //if err != nil {
-        //    return descrs, readErr
-        //}
-
-        //headDescr.Match = match
-
         descrs = append(descrs, headDescr)
     }
     return descrs, err
