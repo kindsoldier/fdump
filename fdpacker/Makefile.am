@@ -9,7 +9,7 @@ fdpacker_SOURCES = fdpacker.go
 
 GOFLAGS = -ldflags="-s -w"
 
-fdpacker$(EXEEXT): $(fdpacker_SOURCES) $(EXTRA_fdpacker_SOURCES)
+fdpacker$(EXEEXT): $(fdpacker_SOURCES)
 	$(GO) build $(GOFLAGS) -o fdpacker$(EXEEXT) $(fdpacker_SOURCES)
 
 distclean-local:

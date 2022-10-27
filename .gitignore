@@ -5,8 +5,10 @@
 *.gif
 *.bin
 *.log
+*.pack
 autom4te.cache
 Makefile
+Makefile.in
 config.status
 works/
 vendor/

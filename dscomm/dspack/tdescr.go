@@ -9,23 +9,23 @@ import (
     "encoding/json"
 )
 
-type TDescr struct {
+type TailDescr struct {
     HSum    []byte          `json:"hSum"`
 }
 
-func NewTDescr() *TDescr {
-    var descr TDescr
+func NewTailDescr() *TailDescr {
+    var descr TailDescr
     return &descr
 }
 
-func UnpackTDescr(descrBin []byte) (*TDescr, error) {
+func UnpackTailDescr(descrBin []byte) (*TailDescr, error) {
     var err error
-    var descr TDescr
+    var descr TailDescr
     err = json.Unmarshal(descrBin, &descr)
     return &descr, err
 }
 
-func (descr *TDescr) Pack() ([]byte, error) {
+func (descr *TailDescr) Pack() ([]byte, error) {
     var err error
     descrBin, err := json.Marshal(descr)
     return descrBin, err

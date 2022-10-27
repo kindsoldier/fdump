@@ -16,8 +16,8 @@ const magicCodeB    int64   = 0xEE44ABBA
 type Header struct {
     MagicCodeA      int64   `json:"magicCodeA"`
     HeaderVersion   int64   `json:"headerVersion"`
-    HDescrVersion   int64   `json:"hDescrVersion"`
-    HDescrSize      int64   `json:"hDescrSize"`
+    HeadDescrVersion   int64   `json:"hDescrVersion"`
+    HeadDescrSize      int64   `json:"hDescrSize"`
     BinSize         int64   `json:"binSize"`
     MagicCodeB      int64   `json:"magicCodeB"`
 }
@@ -26,8 +26,8 @@ func NewHeader() *Header {
     var header Header
     header.MagicCodeA       = magicCodeA
     header.HeaderVersion    = 1
-    header.HDescrVersion    = 1
-    header.HDescrSize       = 0
+    header.HeadDescrVersion    = 1
+    header.HeadDescrSize       = 0
     header.BinSize          = 0
     header.MagicCodeB       = magicCodeB
     return &header
@@ -45,10 +45,10 @@ func (header *Header) Pack() ([]byte, error) {
     headerVersionBytes := encoderI64(header.HeaderVersion)
     headerBuffer.Write(headerVersionBytes)
 
-    descrVersionBytes := encoderI64(header.HDescrVersion)
+    descrVersionBytes := encoderI64(header.HeadDescrVersion)
     headerBuffer.Write(descrVersionBytes)
 
-    descrSizeBytes := encoderI64(header.HDescrSize)
+    descrSizeBytes := encoderI64(header.HeadDescrSize)
     headerBuffer.Write(descrSizeBytes)
 
     binSizeBytes := encoderI64(header.BinSize)
@@ -79,7 +79,7 @@ func UnpackHeader(headerBytes []byte) (*Header, error) {
 
     descrSizeBytes := make([]byte, sizeOfInt64)
     headerReader.Read(descrSizeBytes)
-    header.HDescrSize = decoderI64(descrSizeBytes)
+    header.HeadDescrSize = decoderI64(descrSizeBytes)
 
     binSizeBytes := make([]byte, sizeOfInt64)
     headerReader.Read(binSizeBytes)

@@ -12,6 +12,8 @@ import (
     "os"
     "path/filepath"
     "errors"
+
+    "fdump/dscomm/dspack"
 )
 
 type any = interface{}
@@ -27,7 +29,10 @@ func main() {
 
 type Util struct {
     SubCmd      string
-    FilePath    string
+    PackPath    string
+
+    DestDir     string
+    FileList    []string
 }
 
 func NewUtil() *Util {
@@ -78,9 +83,10 @@ func (util *Util) GetOpt() error {
             util.SubCmd = subCmd
         case packCmd:
             flagSet := flag.NewFlagSet(packCmd, flag.ExitOnError)
+            flagSet.StringVar(&util.PackPath, "pack", util.PackPath, "pack file name")
             flagSet.Usage = func() {
                 fmt.Printf("\n")
-                fmt.Printf("Usage: %s [global options] %s [command options]\n", exeName, subCmd)
+                fmt.Printf("Usage: %s [global options] %s [command options] sources\n", exeName, subCmd)
                 fmt.Printf("\n")
                 fmt.Printf("The command options: none\n")
                 flagSet.PrintDefaults()
@@ -88,10 +94,13 @@ func (util *Util) GetOpt() error {
             }
             flagSet.Parse(subArgs)
             util.SubCmd = subCmd
+            util.FileList = flagSet.Args()
 
         case unpackCmd:
             flagSet := flag.NewFlagSet(unpackCmd, flag.ExitOnError)
-            flagSet.StringVar(&util.FilePath, "file", util.FilePath, "pack file name")
+            flagSet.StringVar(&util.PackPath, "pack", util.PackPath, "pack file name")
+            flagSet.StringVar(&util.PackPath, "dest", util.DestDir, "destination directory")
+
             flagSet.Usage = func() {
                 fmt.Printf("\n")
                 fmt.Printf("Usage: %s [global options] %s [command options]\n", exeName, subCmd)
@@ -102,9 +111,11 @@ func (util *Util) GetOpt() error {
             }
             flagSet.Parse(subArgs)
             util.SubCmd = subCmd
+            util.FileList = flagSet.Args()
 
         case listCmd:
             flagSet := flag.NewFlagSet(listCmd, flag.ExitOnError)
+            flagSet.StringVar(&util.PackPath, "pack", util.PackPath, "pack file name")
 
             flagSet.Usage = func() {
                 fmt.Printf("\n")
@@ -116,6 +127,7 @@ func (util *Util) GetOpt() error {
             }
             flagSet.Parse(subArgs)
             util.SubCmd = subCmd
+            util.FileList = flagSet.Args()
 
         default:
             help()
@@ -156,11 +168,11 @@ func (util *Util) Exec() error {
 
     switch util.SubCmd {
         case packCmd:
-            result, err = util.PackCmd()
+            result, err = util.PackCmd(util.PackPath, util.FileList)
         case unpackCmd:
-            result, err = util.UnpackCmd()
+            result, err = util.UnpackCmd(util.PackPath, util.DestDir, util.FileList)
         case listCmd:
-            result, err = util.ListCmd()
+            result, err = util.ListCmd(util.PackPath, util.FileList)
         case helpCmd:
             return err
         default:
@@ -177,30 +189,60 @@ const dirPerm   fs.FileMode = 0755
 const filePerm  fs.FileMode = 0644
 
 type PackResult struct {
-
+    PackList    []*dspack.HeadDescr
 }
 
 type UnpackResult struct {
+    PackList    []*dspack.HeadDescr
 }
 
 type ListResult struct {
+    PackList    []*dspack.HeadDescr
 }
 
 
-func (util *Util) PackCmd() (*PackResult, error) {
+func (util *Util) PackCmd(packPath string, fileList []string) (*PackResult, error) {
     var err error
     var result PackResult
+
+    packFile, err := os.OpenFile(packPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
+    if err != nil {
+        return &result, err
+    }
+    defer packFile.Close()
+
+    err = dspack.Pack(fileList, packFile)
+
     return &result, err
 }
 
-func (util *Util) UnpackCmd() (*UnpackResult, error) {
+func (util *Util) UnpackCmd(packPath, destDir string, fileList  []string) (*UnpackResult, error) {
     var err error
     var result UnpackResult
+
+    packFile, err := os.OpenFile(packPath, os.O_RDONLY, 0)
+    if err != nil {
+        return &result, err
+    }
+    defer packFile.Close()
+
+    result.PackList, err = dspack.Unpack(packFile, destDir)
+
     return &result, err
 }
 
-func (util *Util) ListCmd() (*ListResult, error) {
+func (util *Util) ListCmd(packPath string, fileList []string) (*ListResult, error) {
     var err error
     var result ListResult
+
+
+    packFile, err := os.OpenFile(packPath, os.O_RDONLY, 0)
+    if err != nil {
+        return &result, err
+    }
+    defer packFile.Close()
+
+    result.PackList, err = dspack.List(packFile)
+
     return &result, err
 }

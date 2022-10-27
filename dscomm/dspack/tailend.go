@@ -18,8 +18,8 @@ const magicCodeD    int64   = 0xAD77ACDC
 type Tailend struct {
     MagicCodeC      int64   `json:"magicCodeA"`
     TailendVersion  int64   `json:"tailendVersion"`
-    TDescrVersion   int64   `json:"tDescrVersion"`
-    TDescrSize      int64   `json:"tDescrSize"`
+    TailDescrVersion   int64   `json:"tDescrVersion"`
+    TailDescrSize      int64   `json:"tDescrSize"`
     MagicCodeD      int64   `json:"magicCodeB"`
 }
 
@@ -28,8 +28,8 @@ func NewTailend() *Tailend {
     var tailend Tailend
     tailend.MagicCodeC       = magicCodeC
     tailend.TailendVersion   = 1
-    tailend.TDescrVersion    = 1
-    tailend.TDescrSize       = 0
+    tailend.TailDescrVersion    = 1
+    tailend.TailDescrSize       = 0
     tailend.MagicCodeD       = magicCodeD
     return &tailend
 }
@@ -46,10 +46,10 @@ func (tailend *Tailend) Pack() ([]byte, error) {
     tailendVersionBytes := encoderI64(tailend.TailendVersion)
     tailendBuffer.Write(tailendVersionBytes)
 
-    descrVersionBytes := encoderI64(tailend.TDescrVersion)
+    descrVersionBytes := encoderI64(tailend.TailDescrVersion)
     tailendBuffer.Write(descrVersionBytes)
 
-    descrSizeBytes := encoderI64(tailend.TDescrSize)
+    descrSizeBytes := encoderI64(tailend.TailDescrSize)
     tailendBuffer.Write(descrSizeBytes)
 
     magicCodeDBytes := encoderI64(tailend.MagicCodeD)
@@ -78,7 +78,7 @@ func UnpackTailend(tailendBytes []byte) (*Tailend, error) {
 
     descrSizeBytes := make([]byte, sizeOfInt64)
     tailendReader.Read(descrSizeBytes)
-    tailend.TDescrSize = decoderI64(descrSizeBytes)
+    tailend.TailDescrSize = decoderI64(descrSizeBytes)
 
     magicCodeDBytes := make([]byte, sizeOfInt64)
     tailendReader.Read(magicCodeDBytes)

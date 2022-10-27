@@ -48,7 +48,7 @@ func NewWriter(byteWriter io.Writer) *Writer {
     return &writer
 }
 
-func (writer *Writer) WriteHDescr(headDescr *HDescr) error {
+func (writer *Writer) WriteHeadDescr(headDescr *HeadDescr) error {
     var err error
 
     headDescrBin, err := headDescr.Pack()
@@ -57,7 +57,7 @@ func (writer *Writer) WriteHDescr(headDescr *HDescr) error {
     }
 
     header := NewHeader()
-    header.HDescrSize = int64(len(headDescrBin))
+    header.HeadDescrSize = int64(len(headDescrBin))
     header.BinSize = headDescr.Size
     headerBin, err := header.Pack()
     if err != nil {
@@ -86,14 +86,14 @@ func (writer *Writer) WriteBin(reader io.Reader, binSize int64) (int64, error) {
 }
 
 
-func (writer *Writer) WriteTDescr(tailDescr *TDescr) error {
+func (writer *Writer) WriteTailDescr(tailDescr *TailDescr) error {
     var err error
     tailDescrBin, err := tailDescr.Pack()
     if err != nil {
         return err
     }
     tailend := NewTailend()
-    tailend.TDescrSize = int64(len(tailDescrBin))
+    tailend.TailDescrSize = int64(len(tailDescrBin))
 
     tailendBin, err := tailend.Pack()
     if err != nil {
@@ -130,9 +130,9 @@ func NewReader(byteReader io.Reader) *Reader {
     return &reader
 }
 
-func (reader *Reader) ReadHDescr() (*HDescr, error) {
+func (reader *Reader) ReadHeadDescr() (*HeadDescr, error) {
     var err error
-    var headDescr *HDescr
+    var headDescr *HeadDescr
 
     headerBin := make([]byte, headerSize)
     _, err = reader.byteReader.Read(headerBin)
@@ -144,12 +144,12 @@ func (reader *Reader) ReadHDescr() (*HDescr, error) {
     if err != nil {
         return headDescr, err
     }
-    headDescrBin := make([]byte, header.HDescrSize)
+    headDescrBin := make([]byte, header.HeadDescrSize)
     _, err = reader.byteReader.Read(headDescrBin)
     if err != nil {
         return headDescr, err
     }
-    headDescr, err = UnpackHDescr(headDescrBin)
+    headDescr, err = UnpackHeadDescr(headDescrBin)
     if err != nil {
         return headDescr, err
     }
@@ -167,9 +167,9 @@ func (reader *Reader) ReadBin(writer io.Writer, binSize int64) (int64, error) {
     return read, err
 }
 
-func (reader *Reader) ReadTDescr() (*TDescr, error) {
+func (reader *Reader) ReadTailDescr() (*TailDescr, error) {
     var err error
-    var tailDescr *TDescr
+    var tailDescr *TailDescr
 
     tailendBin := make([]byte, tailendSize)
     _, err = reader.byteReader.Read(tailendBin)
@@ -181,12 +181,12 @@ func (reader *Reader) ReadTDescr() (*TDescr, error) {
     if err != nil {
         return tailDescr, err
     }
-    tailDescrBin := make([]byte, tailend.TDescrSize)
+    tailDescrBin := make([]byte, tailend.TailDescrSize)
     _, err = reader.byteReader.Read(tailDescrBin)
     if err != nil {
         return tailDescr, err
     }
-    tailDescr, err = UnpackTDescr(tailDescrBin)
+    tailDescr, err = UnpackTailDescr(tailDescrBin)
     if err != nil {
         return tailDescr, err
     }

@@ -9,7 +9,7 @@ import (
     "encoding/json"
 )
 
-type HDescr struct {
+type HeadDescr struct {
     Path    string          `json:"path"`
     Mtime   int64           `json:"mtime"`
     Atime   int64           `json:"atime"`
@@ -27,19 +27,19 @@ type HDescr struct {
     HInit   []byte          `json:"hInit"`
 }
 
-func NewHDescr() *HDescr {
-    var descr HDescr
+func NewHeadDescr() *HeadDescr {
+    var descr HeadDescr
     return &descr
 }
 
-func UnpackHDescr(descrBin []byte) (*HDescr, error) {
+func UnpackHeadDescr(descrBin []byte) (*HeadDescr, error) {
     var err error
-    var descr HDescr
+    var descr HeadDescr
     err = json.Unmarshal(descrBin, &descr)
     return &descr, err
 }
 
-func (descr *HDescr) Pack() ([]byte, error) {
+func (descr *HeadDescr) Pack() ([]byte, error) {
     var err error
     descrBin, err := json.Marshal(descr)
     return descrBin, err
