@@ -6,6 +6,7 @@ package dspack
 
 import (
     "bytes"
+    "encoding/json"
     "io"
     "io/fs"
     "os"
@@ -15,6 +16,8 @@ import (
     "strconv"
     "os/user"
     "time"
+    "sync"
+    "context"
 )
 
 
@@ -200,11 +203,11 @@ func Pack(dirs []string, outWriter io.Writer) error {
     return err
 }
 
-func Unpack(outReader io.Reader, baseDir string) ([]*HeadDescr, error) {
+func Unpack(ioReader io.Reader, baseDir string) ([]*HeadDescr, error) {
     var err error
     descrs := make([]*HeadDescr, 0)
 
-    reader := NewReader(outReader)
+    reader := NewReader(ioReader)
 
     for {
         headDescr, readerErr := reader.ReadHeadDescr()
@@ -389,11 +392,123 @@ func Unpack(outReader io.Reader, baseDir string) ([]*HeadDescr, error) {
     return descrs, err
 }
 
-func List(outReader io.Reader) ([]*HeadDescr, error) {
+func ListBG(ctx context.Context, wg *sync.WaitGroup, ioReader io.Reader, descrChan chan *HeadDescr, errChan chan error) {
     var err error
     descrs := make([]*HeadDescr, 0)
 
-    reader := NewReader(outReader)
+    reader := NewReader(ioReader)
+
+    exitFunc := func() {
+        errChan <- err
+        wg.Done()
+    }
+    defer exitFunc()
+
+    for {
+        select {
+            case <-ctx.Done():
+                return
+            default:
+        }
+
+        headDescr, err := reader.ReadHeadDescr()
+        if err == io.EOF {
+            return
+        }
+        if err != nil {
+            return
+        }
+        if headDescr == nil {
+            return
+        }
+        reader.hashInit = headDescr.HInit
+
+        switch headDescr.Type {
+            case DTypeFile:
+
+                _, readErr := reader.ReadBin(io.Discard, headDescr.Size)
+                if readErr == io.EOF {
+                    return
+                }
+                if err != nil {
+                    return
+                }
+
+                tailDescr, readErr := reader.ReadTailDescr()
+                if readErr == io.EOF {
+                    return
+                }
+                if err != nil {
+                    return
+                }
+                if tailDescr == nil {
+                    return
+                }
+
+
+                if bytes.Compare(tailDescr.HSum, reader.hashSum) == 0 {
+                    headDescr.Match = true
+                }
+
+            case DTypeSlink, DTypeDir:
+
+                headDescr.Match = true
+
+                _, readErr := reader.ReadBin(io.Discard, headDescr.Size)
+                if readErr == io.EOF {
+                    return
+                }
+                if err != nil {
+                    return
+                }
+
+                tailDescr, readErr := reader.ReadTailDescr()
+                if readErr == io.EOF {
+                    return
+                }
+                if err != nil {
+                    return
+                }
+                if tailDescr == nil {
+                    return
+                }
+            default:
+
+                headDescr.Match = true
+
+                _, readErr := reader.ReadBin(io.Discard, headDescr.Size)
+                if readErr == io.EOF {
+                    return
+                }
+                if err != nil {
+                    return
+                }
+
+                tailDescr, readErr := reader.ReadTailDescr()
+                if readErr == io.EOF {
+                    return
+                }
+                if err != nil {
+                    return
+                }
+                if tailDescr == nil {
+                    return
+                }
+
+        }
+        descrs = append(descrs, headDescr)
+        descrChan <- headDescr
+    }
+    return
+}
+
+
+
+func List(ioReader io.Reader, outWriter io.Writer) ([]*HeadDescr, error) {
+    var err error
+    descrs := make([]*HeadDescr, 0)
+
+    reader := NewReader(ioReader)
 
     for {
         headDescr, readerErr := reader.ReadHeadDescr()
@@ -482,6 +597,11 @@ func List(outReader io.Reader) ([]*HeadDescr, error) {
 
         }
         descrs = append(descrs, headDescr)
+        headDescrJson, err := json.Marshal(headDescr)
+        if err != nil {
+            return descrs, err
+        }
+        outWriter.Write(headDescrJson)
     }
     return descrs, err
 }
